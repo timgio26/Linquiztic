@@ -4,11 +4,23 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// CORS
+//var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
+// Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+//CORS
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy(name: MyAllowSpecificOrigins,
+//                      policy =>
+//                      {
+//                          policy.WithOrigins("http://localhost:5173/");
+//                      });
+//});
 
 var connection = String.Empty;
 if (builder.Environment.IsDevelopment())
@@ -20,6 +32,8 @@ else
 {
     connection = Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTIONSTRING");
 }
+Console.WriteLine(connection);
+
 builder.Services.AddDbContext<MyDbContext>(options => options.UseSqlServer(connection));
 
 var app = builder.Build();
@@ -30,6 +44,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+//app.UseCors(MyAllowSpecificOrigins);
 
 app.UseHttpsRedirection();
 

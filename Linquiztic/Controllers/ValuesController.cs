@@ -1,11 +1,13 @@
 ﻿using Linquiztic.Data;
 using Linquiztic.Dtos;
 using Linquiztic.Models;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Linquiztic.Controllers
 {
+    [EnableCors("_myAllowSpecificOrigins")]
     [Route("api/[controller]")]
     [ApiController]
     public class ValuesController(MyDbContext context) : ControllerBase
@@ -32,6 +34,14 @@ namespace Linquiztic.Controllers
             await _context.Users.AddAsync(newuser);
             await _context.SaveChangesAsync();
             return Ok(newuser);
+        }
+
+        [HttpPost("signin")]
+        public async Task<ActionResult> Signin(SigninDto request)
+        {
+            var selectedUser = await _context.Users.FirstOrDefaultAsync(each => each.Email == request.email);
+            if (selectedUser is null) return BadRequest("user exist");
+            return Ok(selectedUser);
         }
 
         [HttpPost("word")]
