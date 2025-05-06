@@ -13,14 +13,14 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 //CORS
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy(name: MyAllowSpecificOrigins,
-//                      policy =>
-//                      {
-//                          policy.WithOrigins("http://localhost:5173/");
-//                      });
-//});
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy",
+                      policyBuilder =>
+                      {
+                          policyBuilder.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:5173");
+                      });
+});
 
 var connection = String.Empty;
 if (builder.Environment.IsDevelopment())
@@ -45,7 +45,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-//app.UseCors(MyAllowSpecificOrigins);
+app.UseCors("CorsPolicy");
 
 app.UseHttpsRedirection();
 

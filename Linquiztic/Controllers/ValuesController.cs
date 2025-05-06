@@ -7,20 +7,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Linquiztic.Controllers
 {
-    [EnableCors("_myAllowSpecificOrigins")]
     [Route("api/[controller]")]
     [ApiController]
     public class ValuesController(MyDbContext context) : ControllerBase
     {
         private readonly MyDbContext _context = context;
 
-        [HttpGet]
-        public async Task<ActionResult<List<User>>> AllCourse() {
-            var alluser = await _context.Users.Include(user => user.Words).ToListAsync();
-            return Ok(alluser);
-        }
+        //[HttpGet]
+        //public async Task<ActionResult<List<User>>> AllCourse()
+        //{
+        //    var alluser = await _context.Users.Include(user => user.Words).ToListAsync();
+        //    return Ok(alluser);
+        //}
 
-        [HttpPost]
+        [HttpPost("signup")]
         public async Task<ActionResult> AddUser(UserDto request)
         {
             var selectedUser = await _context.Users.FirstOrDefaultAsync(each => each.Email == request.email);
@@ -44,40 +44,50 @@ namespace Linquiztic.Controllers
             return Ok(selectedUser);
         }
 
-        [HttpPost("word")]
-        public async Task<ActionResult> AddWord(AddWordDto request)
+        [HttpDelete("deleteUser/{id}")]
+        public async Task<ActionResult> DeleteUser(Guid id)
         {
-            var selectedUser = await _context.Users.FirstOrDefaultAsync(each => each.Id == request.UserId);
+            var selectedUser = await _context.Users.FirstOrDefaultAsync(each => each.Id == id);
             if (selectedUser is null) return BadRequest("no user");
-            Word newWord = new Word()
-            {
-                WordText = request.WordText,
-                UserId = request.UserId,
-                AddedDate = DateOnly.FromDateTime(DateTime.Now),
-                User = selectedUser,
-                Mastery = "new"
-            };
-            await _context.Words.AddAsync(newWord);
-            await _context.SaveChangesAsync();
-            return Ok(newWord);
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteWord(int id)
-        {
-            var selectedWord = await _context.Words.FirstOrDefaultAsync(each => each.Id == id);
-            if (selectedWord is null) return BadRequest();
-            _context.Words.Remove(selectedWord);
+            _context.Users.Remove(selectedUser);
             await _context.SaveChangesAsync();
             return NoContent();
         }
 
+        //[HttpPost("word")]
+        //public async Task<ActionResult> AddWord(AddWordDto request)
+        //{
+        //    var selectedUser = await _context.Users.FirstOrDefaultAsync(each => each.Id == request.UserId);
+        //    if (selectedUser is null) return BadRequest("no user");
+        //    Word newWord = new Word()
+        //    {
+        //        WordText = request.WordText,
+        //        UserId = request.UserId,
+        //        AddedDate = DateOnly.FromDateTime(DateTime.Now),
+        //        User = selectedUser,
+        //        Mastery = "new"
+        //    };
+        //    await _context.Words.AddAsync(newWord);
+        //    await _context.SaveChangesAsync();
+        //    return Ok(newWord);
+        //}
 
-        [HttpGet("allwords")]
-        public async Task<ActionResult<List<Word>>> AllWords()
-        {
-            var allWords = await _context.Words.ToListAsync();
-            return Ok(allWords);
-        }
+        //[HttpDelete("{id}")]
+        //public async Task<ActionResult> DeleteWord(int id)
+        //{
+        //    var selectedWord = await _context.Words.FirstOrDefaultAsync(each => each.Id == id);
+        //    if (selectedWord is null) return BadRequest();
+        //    _context.Words.Remove(selectedWord);
+        //    await _context.SaveChangesAsync();
+        //    return NoContent();
+        //}
+
+
+        //[HttpGet("allwords")]
+        //public async Task<ActionResult<List<Word>>> AllWords()
+        //{
+        //    var allWords = await _context.Words.ToListAsync();
+        //    return Ok(allWords);
+        //}
     }
 }
