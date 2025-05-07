@@ -39,7 +39,7 @@ namespace Linquiztic.Controllers
         [HttpPost("signin")]
         public async Task<ActionResult> Signin(SigninDto request)
         {
-            var selectedUser = await _context.Users.FirstOrDefaultAsync(each => each.Email == request.email);
+            var selectedUser = await _context.Users.Include(user=>user.UserLanguages).FirstOrDefaultAsync(each => each.Email == request.email);
             if (selectedUser is null) return BadRequest("user exist");
             return Ok(selectedUser);
         }
@@ -52,6 +52,25 @@ namespace Linquiztic.Controllers
             _context.Users.Remove(selectedUser);
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        [HttpPost("addLanguage")]
+        public async Task<ActionResult> AddLanguage(AddLanguageDto request)
+        {
+            var selectedUser = await _context.Users.FirstOrDefaultAsync(each => each.Id == request.UserId);
+            if (selectedUser is null) return BadRequest("no user");
+            UserLanguage newLanguage = new UserLanguage()
+            {
+                Language = request.Language,
+                Level = request.Level,
+                UserId = selectedUser.Id,
+                User = selectedUser,
+                Id = Guid.NewGuid()
+            };
+            Console.WriteLine(newLanguage);
+            await _context.UserLanguages.AddAsync(newLanguage);
+            await _context.SaveChangesAsync();
+            return Ok(newLanguage);
         }
 
         //[HttpPost("word")]

@@ -8,9 +8,7 @@ namespace Linquiztic.Models
         public string WordText { get; set; } = string.Empty;
         public DateOnly AddedDate { get; set; }
         public string Mastery { get; set; } = string.Empty;
-        public Guid UserId { get; set; }
-
-        [JsonIgnore]
-        public User User { get; set; }
+        public Guid UserLanguageId { get; set; }
+        public UserLanguage UserLanguage { get; set; } = null!;
     }
 }

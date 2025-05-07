@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Linquiztic.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250502200525_relationUserWord")]
-    partial class relationUserWord
+    [Migration("20250507200745_changeStructure")]
+    partial class changeStructure
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,6 +44,30 @@ namespace Linquiztic.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Linquiztic.Models.UserLanguage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserLanguages");
+                });
+
             modelBuilder.Entity("Linquiztic.Models.Word", b =>
                 {
                     b.Property<int>("Id")
@@ -59,7 +83,7 @@ namespace Linquiztic.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("UserLanguageId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("WordText")
@@ -68,15 +92,15 @@ namespace Linquiztic.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserLanguageId");
 
                     b.ToTable("Words");
                 });
 
-            modelBuilder.Entity("Linquiztic.Models.Word", b =>
+            modelBuilder.Entity("Linquiztic.Models.UserLanguage", b =>
                 {
                     b.HasOne("Linquiztic.Models.User", "User")
-                        .WithMany("Words")
+                        .WithMany("UserLanguages")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -84,7 +108,23 @@ namespace Linquiztic.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Linquiztic.Models.Word", b =>
+                {
+                    b.HasOne("Linquiztic.Models.UserLanguage", "UserLanguage")
+                        .WithMany("Words")
+                        .HasForeignKey("UserLanguageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UserLanguage");
+                });
+
             modelBuilder.Entity("Linquiztic.Models.User", b =>
+                {
+                    b.Navigation("UserLanguages");
+                });
+
+            modelBuilder.Entity("Linquiztic.Models.UserLanguage", b =>
                 {
                     b.Navigation("Words");
                 });
