@@ -1,6 +1,7 @@
 ﻿using Linquiztic.Data;
 using Linquiztic.Dtos;
 using Linquiztic.Models;
+using Linquiztic.Service;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,16 +10,10 @@ namespace Linquiztic.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ValuesController(MyDbContext context) : ControllerBase
+    public class ValuesController(MyDbContext context,AIService aIService) : ControllerBase
     {
         private readonly MyDbContext _context = context;
-
-        //[HttpGet]
-        //public async Task<ActionResult<List<User>>> AllCourse()
-        //{
-        //    var alluser = await _context.Users.Include(user => user.Words).ToListAsync();
-        //    return Ok(alluser);
-        //}
+        private readonly AIService _aiService = aIService;
 
         [HttpPost("signup")]
         public async Task<ActionResult> AddUser(UserDto request)
@@ -54,6 +49,13 @@ namespace Linquiztic.Controllers
             return NoContent();
         }
 
+        [HttpGet("getUserLanguage/{id}")]
+        public async Task<ActionResult> GetUserLanguage(Guid id)
+        {
+            var myLanguages = await _context.UserLanguages.Where(each => each.UserId == id).ToListAsync();
+            return Ok(myLanguages);
+        }
+
         [HttpPost("addLanguage")]
         public async Task<ActionResult> AddLanguage(AddLanguageDto request)
         {
@@ -73,40 +75,66 @@ namespace Linquiztic.Controllers
             return Ok(newLanguage);
         }
 
-        //[HttpPost("word")]
-        //public async Task<ActionResult> AddWord(AddWordDto request)
-        //{
-        //    var selectedUser = await _context.Users.FirstOrDefaultAsync(each => each.Id == request.UserId);
-        //    if (selectedUser is null) return BadRequest("no user");
-        //    Word newWord = new Word()
-        //    {
-        //        WordText = request.WordText,
-        //        UserId = request.UserId,
-        //        AddedDate = DateOnly.FromDateTime(DateTime.Now),
-        //        User = selectedUser,
-        //        Mastery = "new"
-        //    };
-        //    await _context.Words.AddAsync(newWord);
-        //    await _context.SaveChangesAsync();
-        //    return Ok(newWord);
-        //}
+        [HttpDelete("deleteLanguage/{id}")]
+        public async Task<ActionResult> DeleteLanguage(Guid id)
+        {
+            var selectedLanguage = await _context.UserLanguages.FirstOrDefaultAsync(each => each.Id == id);
+            if (selectedLanguage is null) return BadRequest("not found");
+            _context.UserLanguages.Remove(selectedLanguage);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
 
-        //[HttpDelete("{id}")]
-        //public async Task<ActionResult> DeleteWord(int id)
-        //{
-        //    var selectedWord = await _context.Words.FirstOrDefaultAsync(each => each.Id == id);
-        //    if (selectedWord is null) return BadRequest();
-        //    _context.Words.Remove(selectedWord);
-        //    await _context.SaveChangesAsync();
-        //    return NoContent();
-        //}
+        [HttpGet("getLanguage/{id}")]
+        public async Task<ActionResult> GetLanguage(Guid id)
+        {
+            var selectedLanguage = await _context.UserLanguages.Include(each => each.Words).FirstOrDefaultAsync(each => each.Id == id);
+            if (selectedLanguage is null) return BadRequest("not found");
+            return Ok(selectedLanguage);
+        }
 
+        [HttpPost("addWord")]
+        public async Task<ActionResult> AddWord(AddWordDto request)
+        {
+            var selectedLanguage = await _context.UserLanguages.FirstOrDefaultAsync(each => each.Id == request.UserLanguageId);
+            if (selectedLanguage is null) return BadRequest("not found");
+            Word newWord = new Word()
+            {
+                WordText = request.WordText,
+                AddedDate = DateOnly.FromDateTime(DateTime.Now),
+                Mastery = "new",
+                UserLanguageId = request.UserLanguageId,
+                UserLanguage = selectedLanguage
+            };
+            await _context.Words.AddAsync(newWord);
+            await _context.SaveChangesAsync();
+            return Ok(newWord);
+        }
 
-        //[HttpGet("allwords")]
-        //public async Task<ActionResult<List<Word>>> AllWords()
-        //{
-        //    var allWords = await _context.Words.ToListAsync();
-        //    return Ok(allWords);
-        //}
+        [HttpDelete("deleteWord/{id}")]
+        public async Task<ActionResult> DeleteWord(int id)
+        {
+            var selectedWord = await _context.Words.FirstOrDefaultAsync(each => each.Id == id);
+            if (selectedWord is null) return BadRequest();
+            _context.Words.Remove(selectedWord);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpGet("getNewWords")]
+        public async Task<ActionResult> GetWords(Guid userLangId)
+        {
+            var userLanguage = await _context.UserLanguages.Include(each => each.Words).FirstOrDefaultAsync(each=>each.Id == userLangId);
+            if (userLanguage is null){ Console.WriteLine("null"); return NotFound(); }
+            //Console.WriteLine("heheh");
+            List<string> wordList = [];
+            foreach(var word in userLanguage.Words)
+            {
+                wordList.Add(word.WordText);
+            }
+            string words = string.Join(" ", wordList);
+            var response = await _aiService.FetchAiResponse(userLanguage.Language,userLanguage.Level,words);
+            return Ok(response);
+        }
     }
 }
