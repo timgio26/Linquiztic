@@ -1,6 +1,10 @@
-﻿using OpenAI;
+﻿using Linquiztic.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
+using OpenAI;
 using OpenAI.Chat;
 using System.ClientModel;
+using System.Reflection.Emit;
+using System.Text.Json.Nodes;
 
 namespace Linquiztic.Service
 {
@@ -21,13 +25,13 @@ namespace Linquiztic.Service
 
             _client = new ChatClient(model, new ApiKeyCredential(credential), options);
         }
-        public async Task<string> FetchAiResponse(string language,string level,string words)
+        public async Task<JsonNode> FetchAiResponse(string language,string level,string words)
         {
 
             var messages = new List<ChatMessage>
             {
-                new SystemChatMessage("You are a helpful assistant."),
-                new UserChatMessage($"language:{language} , sentence: get new 10 vocab for level {level} outside following words {words}")
+                new SystemChatMessage("JSON response the answer will be sent to client through api"),
+                new UserChatMessage($"get new 10 vocab for level {level} {language} outside following words {words}, repond in json without markdown with following format {{word,meaning}} ")
             };
 
             var requestOptions = new ChatCompletionOptions
@@ -38,7 +42,33 @@ namespace Linquiztic.Service
             };
 
             var response = _client.CompleteChat(messages, requestOptions);
-            return response.Value.Content[0].Text;
+
+            var parsed = JsonArray.Parse(response.Value.Content[0].Text);
+            if (parsed is null) return new JsonArray();
+            return parsed;
+        }
+
+        public async Task<JsonNode> getWordMeaningExample(string word, string language)
+        {
+            var messages = new List<ChatMessage>
+            {
+                new SystemChatMessage("JSON response the answer will be sent to client through api"),
+                new UserChatMessage($"transale {word} from {language} to english, and give simple sentence example and english translation. respond in json without markdown with format {{word,meaning,sample_sentence,sample_translation}}")
+            };
+
+            var requestOptions = new ChatCompletionOptions
+            {
+                Temperature = 1.0f,
+                TopP = 1.0f,
+                MaxOutputTokenCount = 1000
+            };
+
+            var response = _client.CompleteChat(messages, requestOptions);
+
+            var parsed = JsonArray.Parse(response.Value.Content[0].Text);
+            if (parsed is null) return new JsonArray();
+            return parsed;
+
         }
     }
 }

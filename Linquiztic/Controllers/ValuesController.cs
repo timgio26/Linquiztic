@@ -2,7 +2,6 @@
 using Linquiztic.Dtos;
 using Linquiztic.Models;
 using Linquiztic.Service;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -134,6 +133,13 @@ namespace Linquiztic.Controllers
             }
             string words = string.Join(" ", wordList);
             var response = await _aiService.FetchAiResponse(userLanguage.Language,userLanguage.Level,words);
+            return Ok(response);
+        }
+
+        [HttpGet("getWordMeaning")]
+        public async Task<ActionResult> GetWordMeaning(string word,string language)
+        {
+            var response = await _aiService.getWordMeaningExample(word, language);
             return Ok(response);
         }
     }
