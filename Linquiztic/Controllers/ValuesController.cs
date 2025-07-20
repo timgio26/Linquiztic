@@ -14,6 +14,12 @@ namespace Linquiztic.Controllers
         private readonly MyDbContext _context = context;
         private readonly AIService _aiService = aIService;
 
+        [HttpGet("alluser")]
+        public async Task<ActionResult> GetAllUser()
+        {
+            return Ok(await _context.Users.ToListAsync());
+        }
+
         [HttpPost("signup")]
         public async Task<ActionResult> AddUser(UserDto request)
         {
@@ -23,20 +29,21 @@ namespace Linquiztic.Controllers
             {
                 Id = Guid.NewGuid(),
                 Name = request.name,
-                Email = request.email
+                Email = request.email,
+                FirebaseId = request.firebaseId
             };
             await _context.Users.AddAsync(newuser);
             await _context.SaveChangesAsync();
             return Ok(newuser);
         }
 
-        [HttpPost("signin")]
-        public async Task<ActionResult> Signin(SigninDto request)
-        {
-            var selectedUser = await _context.Users.Include(user=>user.UserLanguages).FirstOrDefaultAsync(each => each.Email == request.email);
-            if (selectedUser is null) return BadRequest("user exist");
-            return Ok(selectedUser);
-        }
+        //[HttpPost("signin")]
+        //public async Task<ActionResult> Signin(SigninDto request)
+        //{
+        //    var selectedUser = await _context.Users.Include(user=>user.UserLanguages).FirstOrDefaultAsync(each => each.Email == request.email);
+        //    if (selectedUser is null) return BadRequest("user not exist");
+        //    return Ok(selectedUser);
+        //}
 
         [HttpDelete("deleteUser/{id}")]
         public async Task<ActionResult> DeleteUser(Guid id)
@@ -45,7 +52,7 @@ namespace Linquiztic.Controllers
             if (selectedUser is null) return BadRequest("no user");
             _context.Users.Remove(selectedUser);
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok("delete account success");
         }
 
         [HttpGet("getUserLanguage/{id}")]
