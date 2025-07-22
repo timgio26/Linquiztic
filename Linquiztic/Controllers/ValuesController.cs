@@ -2,6 +2,7 @@
 using Linquiztic.Dtos;
 using Linquiztic.Models;
 using Linquiztic.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,7 @@ namespace Linquiztic.Controllers
         private readonly MyDbContext _context = context;
         private readonly AIService _aiService = aIService;
 
+        [Authorize]
         [HttpGet("alluser")]
         public async Task<ActionResult> GetAllUser()
         {
@@ -45,6 +47,7 @@ namespace Linquiztic.Controllers
         //    return Ok(selectedUser);
         //}
 
+        [Authorize]
         [HttpDelete("deleteUser/{id}")]
         public async Task<ActionResult> DeleteUser(Guid id)
         {
@@ -55,17 +58,21 @@ namespace Linquiztic.Controllers
             return Ok("delete account success");
         }
 
+        [Authorize]
         [HttpGet("getUserLanguage/{id}")]
-        public async Task<ActionResult> GetUserLanguage(Guid id)
+        public async Task<ActionResult> GetUserLanguage(string id)
         {
-            var myLanguages = await _context.UserLanguages.Where(each => each.UserId == id).ToListAsync();
+            var user = await _context.Users.FirstOrDefaultAsync(each => each.FirebaseId == id);
+            if (user is null) return BadRequest("no user found");
+            var myLanguages = await _context.UserLanguages.Where(each => each.UserId == user.Id).ToListAsync();
             return Ok(myLanguages);
         }
 
+        [Authorize]
         [HttpPost("addLanguage")]
         public async Task<ActionResult> AddLanguage(AddLanguageDto request)
         {
-            var selectedUser = await _context.Users.FirstOrDefaultAsync(each => each.Id == request.UserId);
+            var selectedUser = await _context.Users.FirstOrDefaultAsync(each => each.FirebaseId == request.UserId);
             if (selectedUser is null) return BadRequest("no user");
             UserLanguage newLanguage = new UserLanguage()
             {

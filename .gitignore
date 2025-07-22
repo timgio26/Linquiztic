@@ -362,4 +362,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-*.db
+/Linquiztic/ciao-bella-1505a-firebase-adminsdk-fbsvc-85b8b21bf0.json
+/Linquiztic/myLocalDb.db-shm
+/Linquiztic/myLocalDb.db-wal
+/Linquiztic/myLocalDb.db

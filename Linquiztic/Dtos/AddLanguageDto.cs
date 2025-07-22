@@ -4,6 +4,6 @@
     {
         public string Language { get; set; } = string.Empty;
         public string Level { get; set; } = string.Empty;
-        public Guid UserId { get; set; }
+        public string UserId { get; set; }
     }
 }
