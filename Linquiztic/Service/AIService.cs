@@ -48,7 +48,7 @@ namespace Linquiztic.Service
             return parsed;
         }
 
-        public async Task<JsonNode> getWordMeaningExample(string word, string language)
+        public async Task<JsonNode> GetWordMeaningExample(string word, string language)
         {
             var messages = new List<ChatMessage>
             {
@@ -70,5 +70,30 @@ namespace Linquiztic.Service
             return parsed;
 
         }
+
+        public async Task<JsonNode> GetQuiz(List<string> strings,string language,string level)
+        {
+            string wordForQuiz = string.Join(',',strings);
+            var messages = new List<ChatMessage>
+            {
+                new SystemChatMessage("JSON response the answer will be sent to client through api"),
+                new UserChatMessage($@"please make a simple multiple choice questions for English speaker 
+                                    with single answer for each following word: {wordForQuiz} for {language} with level {level},
+                                    respond in json without markdown with format {{question,options:{{a,b,c,d}},answer}}")
+            };
+            var requestOptions = new ChatCompletionOptions
+            {
+                Temperature = 1.0f,
+                TopP = 1.0f,
+                MaxOutputTokenCount = 1000
+            };
+
+            var response = _client.CompleteChat(messages, requestOptions);
+
+            var parsed = JsonArray.Parse(response.Value.Content[0].Text);
+            if (parsed is null) return new JsonArray();
+            return parsed;
+        }
+
     }
 }

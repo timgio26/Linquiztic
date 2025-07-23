@@ -15,11 +15,11 @@ namespace Linquiztic.Controllers
         private readonly MyDbContext _context = context;
         private readonly AIService _aiService = aIService;
 
-        [Authorize]
+        //[Authorize]
         [HttpGet("alluser")]
         public async Task<ActionResult> GetAllUser()
         {
-            return Ok(await _context.Users.ToListAsync());
+            return Ok(await _context.Users.Include(each=>each.UserLanguages).ToListAsync());
         }
 
         [HttpPost("signup")]
@@ -88,6 +88,7 @@ namespace Linquiztic.Controllers
             return Ok(newLanguage);
         }
 
+        [Authorize]
         [HttpDelete("deleteLanguage/{id}")]
         public async Task<ActionResult> DeleteLanguage(Guid id)
         {
@@ -98,6 +99,7 @@ namespace Linquiztic.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpGet("getLanguage/{id}")]
         public async Task<ActionResult> GetLanguage(Guid id)
         {
@@ -106,6 +108,7 @@ namespace Linquiztic.Controllers
             return Ok(selectedLanguage);
         }
 
+        [Authorize]
         [HttpPost("addWord")]
         public async Task<ActionResult> AddWord(AddWordDto request)
         {
@@ -124,6 +127,7 @@ namespace Linquiztic.Controllers
             return Ok(newWord);
         }
 
+        [Authorize]
         [HttpDelete("deleteWord/{id}")]
         public async Task<ActionResult> DeleteWord(int id)
         {
@@ -134,6 +138,7 @@ namespace Linquiztic.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpGet("getNewWords")]
         public async Task<ActionResult> GetWords(Guid userLangId)
         {
@@ -150,10 +155,27 @@ namespace Linquiztic.Controllers
             return Ok(response);
         }
 
+        [Authorize]
         [HttpGet("getWordMeaning")]
         public async Task<ActionResult> GetWordMeaning(string word,string language)
         {
-            var response = await _aiService.getWordMeaningExample(word, language);
+            var response = await _aiService.GetWordMeaningExample(word, language);
+            return Ok(response);
+        }
+
+        [Authorize]
+        [HttpGet("quiz/{id}")]
+        public async Task<ActionResult> GetQuiz(Guid id)
+        {
+            var userLanguage = await _context.UserLanguages.Include(each => each.Words).FirstOrDefaultAsync(each => each.Id == id);
+            if (userLanguage is null) { Console.WriteLine("null"); return NotFound(); }
+            //Console.WriteLine("heheh");
+            List<string> wordList = [];
+            foreach (var word in userLanguage.Words)
+            {
+                wordList.Add(word.WordText);
+            }
+            var response = await _aiService.GetQuiz(wordList,userLanguage.Language, userLanguage.Level);
             return Ok(response);
         }
     }
